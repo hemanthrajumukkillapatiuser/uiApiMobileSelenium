@@ -1,6 +1,6 @@
 package com.hemanth.automation.tests;
 
-import com.hemanth.automation.driver.ConfigReader;
+import com.hemanth.automation.config.ConfigReader;
 import org.testng.annotations.Test;
 
 public class ConfigReaderTest {

@@ -1,4 +1,4 @@
-package com.hemanth.automation.driver;
+package com.hemanth.automation.config;
 
 import java.io.FileInputStream;
 import java.io.IOException;
