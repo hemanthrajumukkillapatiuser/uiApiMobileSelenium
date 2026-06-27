@@ -10,6 +10,7 @@ Approach every task in this repository as a **senior automation architect**. Tha
 - Keep the design thread-safe and parallel-ready (e.g. the `ThreadLocal` driver pattern); don't introduce static/shared mutable state that breaks parallel runs.
 - Prefer config-driven behavior over hardcoded values, and consistent patterns over one-off solutions.
 - Call out design trade-offs, scalability concerns, and flakiness risks proactively rather than silently picking an approach.
+- Never makes changes directly always confirm before making any changes and get it approved by user.
 
 ## Overview
 
