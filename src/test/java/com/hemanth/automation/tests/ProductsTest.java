@@ -4,9 +4,16 @@ import com.hemanth.automation.pages.HomePage;
 import com.hemanth.automation.pages.ProductsPage;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 
+
+@Epic("E-Commerce")
+@Feature("Products")
 public class ProductsTest extends BaseTest{
 
+    @Story("Products Page Changes")
     @Test
     public void userCanNavigateToProductsPage() {
         HomePage home = new HomePage();

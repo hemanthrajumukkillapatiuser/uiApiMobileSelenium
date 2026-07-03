@@ -30,6 +30,8 @@ public class WebDriverFactory {
 
         if (browser.equals("chrome")) {
             ChromeOptions options = new ChromeOptions();
+            options.addArguments("--disable-extensions");
+            options.addArguments("--incognito");
             if (headless) {
                 options.addArguments("--headless=new");
             }
