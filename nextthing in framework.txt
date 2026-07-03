@@ -1,0 +1,5 @@
+Screenshot-on-failure — a TestNG ITestListener that grabs a screenshot to FrameworkConstants.SCREENSHOT_PATH when a test fails.
+•
+Allure reporting — wire the allure-maven plugin (currently missing per AGENTS.md).
+•
+Mobile path — when your Android/Appium env is ready, the same BaseTest/BasePage pattern works with screens/ page objects.

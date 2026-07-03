@@ -4,7 +4,7 @@ import org.openqa.selenium.By;
 
 public class ProductsPage extends BasePage {
 
-    private final By allProductsHeader = By.xpath("//h2[text()='All Products']");
+    private final By allProductsHeader = By.xpath("//h2[contains(.,'All Products')]");
 
     public boolean isAllProductsHeaderDisplayed() {
 
