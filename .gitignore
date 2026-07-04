@@ -40,3 +40,15 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Node / Playwright
+playwright-ts/node_modules/
+playwright-ts/playwright-report/
+playwright-ts/test-results/
+playwright-ts/blob-report/
+playwright-ts/.cache/
+
+# Playwright traces/videos/screenshots generated during runs
+playwright-ts/**/*.zip
+playwright-ts/**/*.webm
+playwright-ts/**/*.png
