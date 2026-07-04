@@ -114,3 +114,21 @@ allure serve target/allure-results
 ## AI Assistant Instructions
 
 Contributor and AI-assistant guidance lives in [`AGENTS.md`](./AGENTS.md) (the single source of truth). [`CLAUDE.md`](./CLAUDE.md) and [`.github/copilot-instructions.md`](./.github/copilot-instructions.md) point to it.
+
+
+## Playwright TypeScript Migration
+
+This repo also includes a Playwright TypeScript module under `playwright-ts/`.
+
+Run Playwright tests:
+
+```bash
+cd playwright-ts
+npm test
+```
+
+Run headed:
+```bash
+cd playwright-ts
+npm run test:headed
+```
