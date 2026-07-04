@@ -2,7 +2,7 @@
 
 A hybrid test automation framework for driving **UI (Selenium)**, **API (rest-assured)**, and **Mobile (Appium)** tests through a single **Cucumber-BDD + TestNG** harness, with **Allure** reporting.
 
-> **Status:** early skeleton (`feature/framework-skeleton`). The package structure, configuration loading, and driver scaffolding are in place; page objects, step definitions, runners, and the driver-creation logic are still to be implemented.
+> **Status:** Web UI path is implemented end-to-end — driver factory, page objects, a Cucumber BDD scenario (with step definitions/hooks) and an equivalent plain-TestNG test, screenshot-on-failure, and Allure reporting all wired up. API and Mobile automation are not yet implemented (the Appium driver path exists in `WebDriverFactory` but is untested).
 
 ## Tech Stack
 
@@ -40,6 +40,9 @@ mvn test -Dtest=ConfigReaderTest
 
 # Run a single test method
 mvn test -Dtest=ConfigReaderTest#verifyConfigReader
+
+# Run the Cucumber suite (via its TestNG runner)
+mvn test -Dtest=CucumberRunner
 ```
 
 > Run Maven from the **project root** — configuration is loaded via the relative path `src/main/resources/config.properties`, so a different working directory will break it.
@@ -51,7 +54,7 @@ All tunable values live in `src/main/resources/config.properties` and are read t
 | Key | Purpose |
 |---|---|
 | `platform` | `web` or `mobile` — selects the Selenium vs. Appium driver path |
-| `browser` | Target browser for web runs |
+| `browser` | Target browser for web runs (`chrome`, `firefox`, `edge`) |
 | `headless` | Run the browser headless (`true`/`false`) |
 | `base.url` | Application under test |
 | `implicit.wait` / `explicit.wait` | Selenium wait timeouts (seconds) |
@@ -65,22 +68,48 @@ All tunable values live in `src/main/resources/config.properties` and are read t
 ```
 src/main/java/com/hemanth/automation/
 ├── config/ConfigReader.java          # Loads config.properties; getProperty(...) accessors
-├── driver/WebDriverFactory.java      # ThreadLocal<WebDriver> lifecycle (parallel-safe)
-└── constants/FrameworkConstants.java # Shared paths (config, screenshots, allure-results)
+├── driver/WebDriverFactory.java      # ThreadLocal<WebDriver> lifecycle; creates Chrome/Firefox/Edge or Appium AndroidDriver
+├── constants/FrameworkConstants.java # Shared paths (config, screenshots, allure-results)
+└── pages/                            # Page objects
+    ├── BasePage.java                 # Shared wait/click/isDisplayed helpers
+    ├── HomePage.java
+    └── ProductsPage.java
 
 src/main/resources/config.properties  # Central configuration
-src/test/java/com/hemanth/automation/  # TestNG tests (e.g. tests/ConfigReaderTest)
+
+src/test/java/com/hemanth/automation/
+├── tests/                            # Plain TestNG tests (e.g. ConfigReaderTest, ProductsTest)
+│   └── BaseTest.java                 # @BeforeMethod/@AfterMethod driver lifecycle + ScreenshotListener
+├── listeners/ScreenshotListener.java  # TestNG ITestListener — screenshot on test failure
+├── hooks/Hooks.java                  # Cucumber @Before/@After — driver lifecycle for BDD scenarios
+├── stepdefinitions/                  # Cucumber step definitions (e.g. ProductsStepDefinitions)
+└── runners/CucumberRunner.java       # AbstractTestNGCucumberTests entry point for the BDD suite
+
+src/test/resources/features/          # .feature files (Gherkin scenarios), e.g. products.feature
 ```
+
+## Cucumber BDD Layer
+
+Feature files under `src/test/resources/features/` describe scenarios in Gherkin; step definitions in `stepdefinitions/` implement them using the same page objects as the plain TestNG tests. `Hooks` creates/quits the driver around each scenario (mirroring `BaseTest`), and `CucumberRunner` (a TestNG `AbstractTestNGCucumberTests` subclass) is the entry point that picks up `features/` and glues in `stepdefinitions` + `hooks`.
 
 ## Reporting
 
-Allure results are written to `target/allure-results/` (generated output; not committed). View them with the Allure CLI:
+Allure results are written to `target/allure-results/` (generated output; not committed). The `allure-maven` plugin is configured in `pom.xml`, so reports can be generated directly:
+
+```bash
+mvn allure:report      # generates target/site/allure-maven-plugin
+mvn allure:serve       # builds and opens the report in a browser
+```
+
+You can also use the Allure CLI directly:
 
 ```bash
 allure serve target/allure-results
 ```
 
-> The `allure-maven` plugin is not yet configured, so there is no `mvn allure:report` goal.
+## Failure Diagnostics
+
+`ScreenshotListener` (a TestNG `ITestListener`, registered via `@Listeners` on `BaseTest`) captures a screenshot to `target/screenshots/` whenever a test fails.
 
 ## AI Assistant Instructions
 
