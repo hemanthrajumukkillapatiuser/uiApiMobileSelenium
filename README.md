@@ -6,16 +6,16 @@ A hybrid test automation framework for driving **UI (Selenium)**, **API (rest-as
 
 ## Tech Stack
 
-| Concern | Library | Version |
-|---|---|---|
-| Language / Build | Java | 17 |
-| Build tool | Maven | — |
-| UI automation | Selenium | 4.43.0 |
-| Test runner | TestNG | 7.12.0 |
-| BDD | Cucumber (`cucumber-java`, `cucumber-testng`) | 7.34.3 |
-| API testing | rest-assured | 6.0.0 |
-| Mobile automation | Appium java-client | 10.1.1 |
-| Reporting | Allure (`allure-testng`) | 2.34.0 |
+| Concern           | Library                                       | Version |
+| ----------------- | --------------------------------------------- | ------- |
+| Language / Build  | Java                                          | 17      |
+| Build tool        | Maven                                         | —       |
+| UI automation     | Selenium                                      | 4.43.0  |
+| Test runner       | TestNG                                        | 7.12.0  |
+| BDD               | Cucumber (`cucumber-java`, `cucumber-testng`) | 7.34.3  |
+| API testing       | rest-assured                                  | 6.0.0   |
+| Mobile automation | Appium java-client                            | 10.1.1  |
+| Reporting         | Allure (`allure-testng`)                      | 2.34.0  |
 
 > **TestNG only** — JUnit is intentionally not used in this project.
 
@@ -51,17 +51,17 @@ mvn test -Dtest=CucumberRunner
 
 All tunable values live in `src/main/resources/config.properties` and are read through `ConfigReader` (never hardcoded elsewhere):
 
-| Key | Purpose |
-|---|---|
-| `platform` | `web` or `mobile` — selects the Selenium vs. Appium driver path |
-| `browser` | Target browser for web runs (`chrome`, `firefox`, `edge`) |
-| `headless` | Run the browser headless (`true`/`false`) |
-| `base.url` | Application under test |
-| `implicit.wait` / `explicit.wait` | Selenium wait timeouts (seconds) |
-| `appium.server.url` | Appium server endpoint |
-| `mobile.platform` | Mobile OS (e.g. `android`) |
-| `android.device.name` | Target device/emulator |
-| `android.app.path` | Path to the app under test |
+| Key                               | Purpose                                                         |
+| --------------------------------- | --------------------------------------------------------------- |
+| `platform`                        | `web` or `mobile` — selects the Selenium vs. Appium driver path |
+| `browser`                         | Target browser for web runs (`chrome`, `firefox`, `edge`)       |
+| `headless`                        | Run the browser headless (`true`/`false`)                       |
+| `base.url`                        | Application under test                                          |
+| `implicit.wait` / `explicit.wait` | Selenium wait timeouts (seconds)                                |
+| `appium.server.url`               | Appium server endpoint                                          |
+| `mobile.platform`                 | Mobile OS (e.g. `android`)                                      |
+| `android.device.name`             | Target device/emulator                                          |
+| `android.app.path`                | Path to the app under test                                      |
 
 ## Project Structure
 

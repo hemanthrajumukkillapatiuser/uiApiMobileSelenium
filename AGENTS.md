@@ -44,6 +44,7 @@ Convert existing Selenium Java TestNG or Cucumber tests into runnable Playwright
 The source automation framework is Selenium Java.
 
 Rules for Java code:
+
 - Use TestNG only.
 - Never introduce JUnit.
 - Keep Selenium Java framework config-driven using `ConfigReader` and `config.properties`.
@@ -56,6 +57,7 @@ Rules for Java code:
 The target automation framework is Playwright TypeScript.
 
 Rules for Playwright code:
+
 - Use `@playwright/test`.
 - Use TypeScript.
 - Use async/await.
