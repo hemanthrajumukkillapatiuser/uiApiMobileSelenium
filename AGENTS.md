@@ -172,12 +172,16 @@ Run Playwright TypeScript tests:
 cd playwright-ts
 npm test
 ```
+
 Run Playwright headed:
+
 ```bash
 cd playwright-ts
 npm run test:headed
 ```
-Open Playwright report
+
+Open Playwright report:
+
 ```bash
 cd playwright-ts
 npm run report

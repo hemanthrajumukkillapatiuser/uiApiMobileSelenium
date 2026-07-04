@@ -21,5 +21,6 @@ After approval:
 cd playwright-ts
 npm test
 ```
+
 6. Fix TypeScript, locator, or runtime issues.
 7. Keep Selenium and Playwright tests runnable independently.
