@@ -2,7 +2,7 @@
 
 A hybrid test automation framework for driving **UI (Selenium)**, **API (rest-assured)**, and **Mobile (Appium)** tests through a single **Cucumber-BDD + TestNG** harness, with **Allure** reporting.
 
-> **Status:** Web UI path is implemented end-to-end — driver factory, page objects, a Cucumber BDD scenario (with step definitions/hooks) and an equivalent plain-TestNG test, screenshot-on-failure, and Allure reporting all wired up. API and Mobile automation are not yet implemented (the Appium driver path exists in `WebDriverFactory` but is untested).
+> **Status:** Web UI path is implemented end-to-end — driver factory, page objects (`HomePage`, `ProductsPage`, `CartPage`), Cucumber BDD scenarios (with step definitions/hooks) and equivalent plain-TestNG tests covering products-page navigation and an add-to-cart-and-verify-in-cart flow, screenshot-on-failure, and Allure reporting all wired up. A parallel Playwright TypeScript suite under `playwright-ts/` mirrors the same flows. API and Mobile automation are not yet implemented (the Appium driver path exists in `WebDriverFactory` but is untested).
 
 ## Tech Stack
 
@@ -71,9 +71,10 @@ src/main/java/com/hemanth/automation/
 ├── driver/WebDriverFactory.java      # ThreadLocal<WebDriver> lifecycle; creates Chrome/Firefox/Edge or Appium AndroidDriver
 ├── constants/FrameworkConstants.java # Shared paths (config, screenshots, allure-results)
 └── pages/                            # Page objects
-    ├── BasePage.java                 # Shared wait/click/isDisplayed helpers
+    ├── BasePage.java                 # Shared wait/click/isDisplayed/getText helpers + ad-overlay dismissal
     ├── HomePage.java
-    └── ProductsPage.java
+    ├── ProductsPage.java
+    └── CartPage.java
 
 src/main/resources/config.properties  # Central configuration
 
@@ -117,7 +118,20 @@ Contributor and AI-assistant guidance lives in [`AGENTS.md`](./AGENTS.md) (the s
 
 ## Playwright TypeScript Migration
 
-This repo also includes a Playwright TypeScript module under `playwright-ts/`.
+This repo also includes a Playwright TypeScript module under `playwright-ts/` that mirrors the Selenium Java flows:
+
+```
+playwright-ts/
+├── pages/
+│   ├── HomePage.ts
+│   ├── ProductsPage.ts
+│   └── CartPage.ts
+├── tests/products.spec.ts   # products-page visibility + add-to-cart-and-verify-in-cart
+├── utils/adOverlay.ts       # blocks ad-network requests; click-and-retry fallback for stray overlays
+└── playwright.config.ts
+```
+
+`automationexercise.com` serves ad interstitials that can intercept clicks; `utils/adOverlay.ts` blocks the known ad domains (`doubleclick.net`, `googlesyndication.com`, etc.) at the network level via `page.route()`, with a reactive dismiss-and-retry click as a fallback.
 
 Run Playwright tests:
 
