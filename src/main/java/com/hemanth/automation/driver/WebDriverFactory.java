@@ -6,6 +6,9 @@ import io.appium.java_client.android.options.UiAutomator2Options;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.devtools.DevTools;
+import org.openqa.selenium.devtools.HasDevTools;
+import org.openqa.selenium.devtools.v147.network.Network;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.edge.EdgeDriver;
@@ -14,6 +17,8 @@ import org.openqa.selenium.edge.EdgeOptions;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
+import java.util.List;
+import java.util.Optional;
 
 
 public class WebDriverFactory {
@@ -35,7 +40,9 @@ public class WebDriverFactory {
             if (headless) {
                 options.addArguments("--headless=new");
             }
-            return new ChromeDriver(options);
+            WebDriver chromeDriver = new ChromeDriver(options);
+            blockAdNetworkRequests(chromeDriver);
+            return chromeDriver;
 
         } else if (browser.equals("firefox")) {
             FirefoxOptions options = new FirefoxOptions();
@@ -49,10 +56,38 @@ public class WebDriverFactory {
             if (headless) {
                 options.addArguments("--headless=new");
             }
-            return new EdgeDriver(options);
+            WebDriver edgeDriver = new EdgeDriver(options);
+            blockAdNetworkRequests(edgeDriver);
+            return edgeDriver;
 
         } else {
             throw new IllegalArgumentException("Unsupported browser: " + browser);
+        }
+    }
+
+    /**
+     * automationexercise.com serves Google-network ad creatives (including
+     * full-page vignette interstitials) that intermittently intercept clicks
+     * and hide page content. Blocking the ad domains at the network level via
+     * CDP is more reliable than reactively dismissing whatever overlay renders.
+     */
+    private static void blockAdNetworkRequests(WebDriver webDriver) {
+        if (!(webDriver instanceof HasDevTools)) {
+            return;
+        }
+        try {
+            DevTools devTools = ((HasDevTools) webDriver).getDevTools();
+            devTools.createSession();
+            devTools.send(Network.enable(
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
+            devTools.send(Network.setBlockedURLs(Optional.empty(), Optional.of(List.of(
+                "*doubleclick.net*",
+                "*googlesyndication.com*",
+                "*googleadservices.com*",
+                "*adservice.google.com*"
+            ))));
+        } catch (Exception e) {
+            // DevTools ad blocking is best-effort; continue without it if unsupported.
         }
     }
 

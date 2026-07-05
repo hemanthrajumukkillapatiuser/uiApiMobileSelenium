@@ -6,6 +6,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -44,5 +45,15 @@ public class BasePage {
 
     protected String getText(By locator) {
         return wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).getText();
+    }
+
+    protected void dismissAdOverlayIfPresent() {
+        try {
+            WebElement closeButton = new WebDriverWait(driver, Duration.ofSeconds(3))
+                .until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[text()='Close']")));
+            closeButton.click();
+        } catch (TimeoutException e) {
+            // No ad overlay appeared within the wait window; nothing to dismiss.
+        }
     }
 }

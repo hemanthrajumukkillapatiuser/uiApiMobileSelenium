@@ -20,10 +20,12 @@ public class ProductsPage extends BasePage {
     }
 
     public void addFirstProductToCart() {
+        dismissAdOverlayIfPresent();
         jsClick(firstAddToCartButton);
     }
 
     public void goToCartFromModal() {
+        dismissAdOverlayIfPresent();
         click(viewCartModalLink);
     }
 }

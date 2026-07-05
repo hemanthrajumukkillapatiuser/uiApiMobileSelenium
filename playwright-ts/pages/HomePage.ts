@@ -1,4 +1,5 @@
 import { expect, Locator, Page } from "@playwright/test";
+import { blockAdNetwork, clickWithAdGuard } from "../utils/adOverlay";
 
 export class HomePage {
   readonly page: Page;
@@ -14,6 +15,7 @@ export class HomePage {
   }
 
   async openHomePage() {
+    await blockAdNetwork(this.page);
     await this.page.goto("/");
   }
 
@@ -22,6 +24,6 @@ export class HomePage {
   }
 
   async clickProducts() {
-    await this.productsLink.click();
+    await clickWithAdGuard(this.productsLink);
   }
 }
