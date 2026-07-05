@@ -10,6 +10,7 @@ public class HomePage extends BasePage {
 
     public void open() {
         driver.get(ConfigReader.getProperty("base.url"));
+        dismissAdOverlayIfPresent();
     }
 
     public boolean isHomepageDisplayed() {
@@ -17,6 +18,7 @@ public class HomePage extends BasePage {
     }
 
     public void goToProductsPage() {
+        dismissAdOverlayIfPresent();
         jsClick(productsLink);
     }
 }
