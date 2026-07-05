@@ -14,7 +14,7 @@ Approach every task in this repository as a **senior automation architect**. Tha
 
 ## Overview
 
-A **hybrid test automation framework** intended to drive UI (Selenium), API (rest-assured), and Mobile (Appium) tests through a single Cucumber-BDD + TestNG harness, with Allure reporting. The web UI path is implemented end-to-end: config loading, the `WebDriverFactory` driver lifecycle (Chrome/Firefox/Edge + an Appium `AndroidDriver` path), page objects, a Cucumber BDD scenario (feature file + step definitions + hooks + runner), an equivalent plain-TestNG test, screenshot-on-failure, and Allure reporting. API testing and a real Mobile run against a device/emulator are not yet implemented.
+A **hybrid test automation framework** intended to drive UI (Selenium), API (rest-assured), and Mobile (Appium) tests through a single Cucumber-BDD + TestNG harness, with Allure reporting. The web UI path is implemented end-to-end: config loading, the `WebDriverFactory` driver lifecycle (Chrome/Firefox/Edge + an Appium `AndroidDriver` path, with CDP-based ad-network request blocking on Chrome/Edge), page objects (`HomePage`, `ProductsPage`, `CartPage`), Cucumber BDD scenarios (feature file + step definitions + hooks + runner) with equivalent plain-TestNG tests covering products-page navigation and the add-to-cart-and-verify flow, screenshot-on-failure, and Allure reporting. A parallel Playwright TypeScript migration under `playwright-ts/` mirrors the same page objects and flows. API testing and a real Mobile run against a device/emulator are not yet implemented.
 
 ## Build & Test Commands
 
@@ -189,20 +189,14 @@ cd playwright-ts
 npm run report
 ```
 
-## Test Framework Convention
-
-**Java tests use TestNG only — do not use JUnit.** JUnit was deliberately removed from this project.
-
-**Playwright TypeScript tests must use `@playwright/test`.**
-
 ## Architecture
 
 Single Maven module under `com.hemanth.automation`:
 
 - **`config.ConfigReader`** — central, app-wide configuration access. Loads `src/main/resources/config.properties` once in a static initializer and exposes `getProperty(key)` / `getProperty(key, default)`. All tunable values (browser, headless, base URL, waits, platform, Appium settings) flow through here; **do not hardcode** these values elsewhere.
-- **`driver.WebDriverFactory`** — owns the `WebDriver` lifecycle via a `ThreadLocal<WebDriver>`, so the design is thread-safe for parallel execution. `createDriver()` reads `platform` and dispatches to `createWebDriver()` (Chrome/Firefox/Edge, config-driven headless) or `createMobileDriver()` (Appium `AndroidDriver` via `UiAutomator2Options`), then applies `implicit.wait` and (for web) maximizes the window. `getDriver()` / `quitDriver()` round out the lifecycle, with `quitDriver()` calling `remove()` on the ThreadLocal.
+- **`driver.WebDriverFactory`** — owns the `WebDriver` lifecycle via a `ThreadLocal<WebDriver>`, so the design is thread-safe for parallel execution. `createDriver()` reads `platform` and dispatches to `createWebDriver()` (Chrome/Firefox/Edge, config-driven headless) or `createMobileDriver()` (Appium `AndroidDriver` via `UiAutomator2Options`), then applies `implicit.wait` and (for web) maximizes the window. For Chrome/Edge, `createWebDriver()` also calls `blockAdNetworkRequests()`, which uses the Chrome DevTools Protocol (`Network.setBlockedURLs`) to block known ad domains (the site under test serves ad interstitials that intermittently intercept clicks); this is best-effort and silently no-ops if DevTools isn't available. `getDriver()` / `quitDriver()` round out the lifecycle, with `quitDriver()` calling `remove()` on the ThreadLocal.
 - **`constants.FrameworkConstants`** — non-instantiable holder for shared paths (`CONFIG_FILE_PATH`, `SCREENSHOT_PATH`, `ALLURE_RESULTS_PATH`).
-- **`pages`** — page objects. `BasePage` constructs its own `WebDriverWait` (from `explicit.wait`) and exposes `click` / `jsClick` / `isDisplayed` helpers; `HomePage` and `ProductsPage` extend it and hold their own locators.
+- **`pages`** — page objects. `BasePage` constructs its own `WebDriverWait` (from `explicit.wait`) and exposes `click` / `jsClick` / `isDisplayed` / `getText` helpers plus `dismissAdOverlayIfPresent()` (best-effort fallback dismissal of any ad overlay that slips past the network block); `HomePage`, `ProductsPage`, and `CartPage` extend it and hold their own locators.
 - **`tests`** — plain TestNG test classes. `BaseTest` handles `@BeforeMethod`/`@AfterMethod` driver lifecycle and registers `ScreenshotListener` via `@Listeners`; `ConfigReaderTest` and `ProductsTest` (Allure-annotated with `@Epic`/`@Feature`/`@Story`) extend it or stand alone.
 - **`listeners.ScreenshotListener`** — a TestNG `ITestListener` that saves a screenshot to `FrameworkConstants.SCREENSHOT_PATH` on `onTestFailure`.
 - **BDD layer** — `src/test/resources/features/*.feature` (Gherkin) + `stepdefinitions/*StepDefinitions` (Cucumber glue using the same page objects as the TestNG tests) + `hooks.Hooks` (`@Before`/`@After` driver lifecycle, mirroring `BaseTest`) + `runners.CucumberRunner` (`AbstractTestNGCucumberTests` subclass wired via `@CucumberOptions` to the `features/` dir and both glue packages).
