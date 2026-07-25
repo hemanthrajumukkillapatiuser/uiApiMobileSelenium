@@ -22,7 +22,8 @@ public class ConfigReader {
     }
 
     public static String getProperty(String key) {
-        return prop.getProperty(key);
+        String sysValue = System.getProperty(key);
+        return sysValue != null ? sysValue : prop.getProperty(key);
     }
 
     public static String getProperty(String key, String defaultValue) {

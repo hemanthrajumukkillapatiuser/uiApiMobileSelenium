@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng.dtd">
+<suite name="Mobile Web Suite">
+    <parameter name="platform" value="mobile"/>
+    <test name="Mobile Web Tests">
+        <classes>
+            <class name="com.hemanth.automation.tests.ProductsTest"/>
+        </classes>
+    </test>
+</suite>
