@@ -2,7 +2,7 @@
 
 A hybrid test automation framework for driving **UI (Selenium)**, **API (rest-assured)**, and **Mobile (Appium)** tests through a single **Cucumber-BDD + TestNG** harness, with **Allure** reporting.
 
-> **Status:** Web UI path is implemented end-to-end — driver factory, page objects (`HomePage`, `ProductsPage`, `CartPage`), Cucumber BDD scenarios (with step definitions/hooks) and equivalent plain-TestNG tests covering products-page navigation and an add-to-cart-and-verify-in-cart flow, screenshot-on-failure, and Allure reporting all wired up. A parallel Playwright TypeScript suite under `playwright-ts/` mirrors the same flows. API and Mobile automation are not yet implemented (the Appium driver path exists in `WebDriverFactory` but is untested).
+> **Status:** Web UI and **Mobile Web** paths are implemented end-to-end — config-driven `ConfigReader`, a thread-safe `WebDriverFactory` (Chrome/Firefox/Edge for web, Appium `AndroidDriver` for mobile web), page objects (`HomePage`, `ProductsPage`, `CartPage`), and **two flows** covered in both plain TestNG **and** Cucumber BDD: products-page navigation and add-first-product-to-cart-and-verify-in-cart. The same tests run on both desktop and mobile Chrome without locator changes. Screenshot-on-failure and Allure reporting are wired up. A parallel **Playwright TypeScript** suite under `playwright-ts/` mirrors the same flows. API testing is not yet implemented. See [Roadmap / Yet to Implement](#roadmap--yet-to-implement).
 
 ## Tech Stack
 
@@ -23,7 +23,7 @@ A hybrid test automation framework for driving **UI (Selenium)**, **API (rest-as
 
 - JDK 17
 - Maven 3.x
-- (Mobile) A running Appium server and Android emulator/device for `platform=mobile` runs
+- (Mobile) Android SDK, Appium, and an Android emulator — see [Mobile Web Testing Setup](#mobile-web-testing-setup)
 - (Optional) [Allure CLI](https://allurereport.org/docs/install/) to view reports
 
 ## Getting Started
@@ -61,7 +61,11 @@ All tunable values live in `src/main/resources/config.properties` and are read t
 | `appium.server.url`               | Appium server endpoint                                          |
 | `mobile.platform`                 | Mobile OS (e.g. `android`)                                      |
 | `android.device.name`             | Target device/emulator                                          |
-| `android.app.path`                | Path to the app under test                                      |
+| `android.app.path`                | Path to the app under test (leave empty for mobile web)         |
+| `mobile.browser`                  | Browser for mobile web testing (`chrome`)                       |
+| `mobile.automation.name`          | Appium automation engine (`UiAutomator2`)                       |
+
+Any config key can be overridden from the command line via `-Dkey=value` (e.g. `-Dplatform=mobile`).
 
 ## Project Structure
 
@@ -93,6 +97,75 @@ src/test/resources/features/          # .feature files (Gherkin scenarios), e.g.
 
 Feature files under `src/test/resources/features/` describe scenarios in Gherkin; step definitions in `stepdefinitions/` implement them using the same page objects as the plain TestNG tests. `Hooks` creates/quits the driver around each scenario (mirroring `BaseTest`), and `CucumberRunner` (a TestNG `AbstractTestNGCucumberTests` subclass) is the entry point that picks up `features/` and glues in `stepdefinitions` + `hooks`.
 
+## Mobile Web Testing Setup
+
+The framework runs the same web tests on mobile Chrome via Appium + Android Emulator. No locator changes needed — the page objects work on both desktop and mobile.
+
+### One-Time Setup (already done if you followed this guide)
+
+1. **Android Studio** — install via `winget install Google.AndroidStudio`
+2. **Android SDK** — install command-line tools, platform-tools, emulator, and a system image:
+   ```powershell
+   sdkmanager "platform-tools" "emulator" "platforms;android-34" "system-images;android-34;google_apis_playstore;x86_64"
+   ```
+3. **Environment variables** — set these permanently (User scope):
+   ```powershell
+   [System.Environment]::SetEnvironmentVariable("ANDROID_HOME", "C:\Users\<you>\AppData\Local\Android\Sdk", "User")
+   [System.Environment]::SetEnvironmentVariable("ANDROID_SDK_ROOT", "C:\Users\<you>\AppData\Local\Android\Sdk", "User")
+   ```
+   Add to PATH: `%ANDROID_HOME%\platform-tools`, `%ANDROID_HOME%\emulator`, `%ANDROID_HOME%\cmdline-tools\latest\bin`
+4. **Create an AVD:**
+   ```powershell
+   avdmanager create avd -n "Pixel_7_API_34" -k "system-images;android-34;google_apis_playstore;x86_64" -d "pixel_7"
+   ```
+5. **Install Appium + UiAutomator2 driver:**
+   ```powershell
+   npm install -g appium
+   appium driver install uiautomator2
+   ```
+
+### Running Mobile Web Tests
+
+Three terminals are needed:
+
+**Terminal 1 — Start the emulator:**
+```powershell
+emulator -avd Pixel_7_API_34
+```
+Wait for the Android home screen to appear.
+
+**Terminal 2 — Start Appium server:**
+```powershell
+appium --allow-insecure=uiautomator2:chromedriver_autodownload
+```
+Keep this running. You should see: `Appium REST http interface listener started on http://0.0.0.0:4723`
+
+**Terminal 3 — Run the tests:**
+```powershell
+mvn test "-DsuiteXmlFile=src/test/resources/testNG-mobile.xml" "-Dplatform=mobile"
+```
+
+Chrome will open on the emulator, navigate to automationexercise.com, and execute the same test flows.
+
+### Verifying the Environment
+
+```powershell
+adb version              # Android Debug Bridge version
+adb devices              # Should show "emulator-5554  device"
+appium --version         # Should show 3.x
+emulator -list-avds      # Should show "Pixel_7_API_34"
+```
+
+### Switching Between Web and Mobile
+
+```powershell
+# Desktop web (default)
+mvn test
+
+# Mobile web
+mvn test "-DsuiteXmlFile=src/test/resources/testNG-mobile.xml" "-Dplatform=mobile"
+```
+
 ## Reporting
 
 Allure results are written to `target/allure-results/` (generated output; not committed). The `allure-maven` plugin is configured in `pom.xml`, so reports can be generated directly:
@@ -112,9 +185,35 @@ allure serve target/allure-results
 
 `ScreenshotListener` (a TestNG `ITestListener`, registered via `@Listeners` on `BaseTest`) captures a screenshot to `target/screenshots/` whenever a test fails.
 
-## AI Assistant Instructions
+## Agents
 
-Contributor and AI-assistant guidance lives in [`AGENTS.md`](./AGENTS.md) (the single source of truth). [`CLAUDE.md`](./CLAUDE.md) and [`.github/copilot-instructions.md`](./.github/copilot-instructions.md) point to it.
+This project is built to be worked on with AI coding assistants, and the agent behavior is version-controlled alongside the code. There are three layers:
+
+### 1. Instruction agents (how any assistant should behave)
+
+These files define the operating rules for any AI assistant editing the repo — act as a **senior automation architect**, keep everything config-driven, TestNG only, thread-safe parallel design, and confirm changes before editing.
+
+| File                                                                 | Role                                                              |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [`AGENTS.md`](./AGENTS.md)                                           | **Single source of truth** — mindset, commands, architecture, migration rules |
+| [`CLAUDE.md`](./CLAUDE.md)                                           | Claude Code entry point — points to `AGENTS.md`                  |
+| [`.github/copilot-instructions.md`](./.github/copilot-instructions.md) | GitHub Copilot entry point — points to `AGENTS.md`              |
+
+### 2. Selenium → Playwright migration agent
+
+A repo-owned prompt agent that converts Selenium Java tests into equivalent Playwright TypeScript tests while preserving the business flow, page-object design, and assertions.
+
+- Prompt: [`agents/selenium-to-playwright/convert-test.prompt.md`](./agents/selenium-to-playwright/convert-test.prompt.md)
+- Conversion rules & locator mappings: the *"Selenium Java to Playwright TypeScript Migration Agent"* section of [`AGENTS.md`](./AGENTS.md)
+- Workflow: read the Selenium test + page objects → summarize planned files → **ask for approval** → generate `playwright-ts/pages` + `playwright-ts/tests` → run `npm test` → fix issues. Selenium and Playwright suites stay independently runnable.
+
+### 3. Playwright test-generation agents (bundled tooling)
+
+The Playwright package under `playwright-ts/node_modules/playwright/lib/agents/` ships browser-driving agents used to author/repair specs by actually interacting with the live site (the second cart test case was authored this way):
+
+- **`playwright-test-generator`** — drives a real browser and writes a Playwright test from the observed interactions.
+- **`playwright-test-healer`** — re-runs and repairs failing/flaky specs.
+- **`playwright-test-planner`** — plans test scenarios before generation.
 
 ## Playwright TypeScript Migration
 
@@ -146,3 +245,14 @@ Run headed:
 cd playwright-ts
 npm run test:headed
 ```
+
+## Roadmap / Yet to Implement
+
+The framework is intentionally scaffolded for UI + API + Mobile, but only the **web UI** path is complete today. Notes on what's still open:
+
+- **API testing** — `rest-assured` is already a dependency, but no API tests, request/response models, or service layer exist yet.
+- **Mobile (Appium)** — ~~`WebDriverFactory` has an `AndroidDriver` path but has not been run against a real emulator/device.~~ **Done.** Mobile web testing works end-to-end via Appium + Android Emulator. The same `ProductsTest` flows run on mobile Chrome. See [Mobile Web Testing Setup](#mobile-web-testing-setup). Native app testing (APK) is not yet implemented.
+- **Double execution** — the same scenarios currently run twice on `mvn test` (once via the plain-TestNG `ProductsTest`, once via `CucumberRunner`). Acceptable for now; can be scoped later with a `testng.xml` suite or Maven profiles.
+- **CI pipeline** — no CI workflow is wired up yet (build + Selenium + Playwright suites on push/PR).
+- **Cross-browser / parallel runs** — the `ThreadLocal` driver design supports parallelism, but no parallel `testng.xml` config or cross-browser matrix is defined yet.
+- **More coverage** — only two web flows (products navigation, add-to-cart) exist so far; broader scenarios (checkout, login/signup, negative cases) are not yet written.

@@ -114,16 +114,22 @@ public class WebDriverFactory {
     }
 
     private static WebDriver createMobileDriver() {
-        String serverUrl  = ConfigReader.getProperty("appium.server.url") ;
-        String deviceName = ConfigReader.getProperty("android.device.name") ;
-        String appPath    = ConfigReader.getProperty("android.app.path") ;
-        String platform = ConfigReader.getProperty("mobile.platform");
+        String serverUrl  = ConfigReader.getProperty("appium.server.url");
+        String deviceName = ConfigReader.getProperty("android.device.name");
+        String appPath    = ConfigReader.getProperty("android.app.path");
+        String platform   = ConfigReader.getProperty("mobile.platform");
+        String browser    = ConfigReader.getProperty("mobile.browser");
 
         UiAutomator2Options options = new UiAutomator2Options();
         options.setDeviceName(deviceName);
         options.setPlatformName(platform);
+        options.setCapability("appium:chromedriverAutodownload", true);
         if (appPath != null && !appPath.isBlank()) {
             options.setApp(appPath);
+        } else if (browser != null && !browser.isBlank()) {
+            options.withBrowserName(browser);
+            options.setCapability("goog:chromeOptions",
+                java.util.Map.of("args", List.of("--no-first-run", "--disable-fre", "--no-default-browser-check")));
         }
         try {
             return new AndroidDriver(new URL(serverUrl), options);
