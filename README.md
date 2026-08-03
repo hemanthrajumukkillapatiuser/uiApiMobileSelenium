@@ -2,7 +2,7 @@
 
 A hybrid test automation framework for driving **UI (Selenium)**, **API (rest-assured)**, and **Mobile (Appium)** tests through a single **Cucumber-BDD + TestNG** harness, with **Allure** reporting.
 
-> **Status:** Web UI and **Mobile Web** paths are implemented end-to-end — config-driven `ConfigReader`, a thread-safe `WebDriverFactory` (Chrome/Firefox/Edge for web, Appium `AndroidDriver` for mobile web), page objects (`HomePage`, `ProductsPage`, `CartPage`), and **two flows** covered in both plain TestNG **and** Cucumber BDD: products-page navigation and add-first-product-to-cart-and-verify-in-cart. The same tests run on both desktop and mobile Chrome without locator changes. Screenshot-on-failure and Allure reporting are wired up. A parallel **Playwright TypeScript** suite under `playwright-ts/` mirrors the same flows. API testing is not yet implemented. See [Roadmap / Yet to Implement](#roadmap--yet-to-implement).
+> **Status:** All three test layers are implemented — **Web UI** (Selenium), **API** (RestAssured), and **Mobile Web** (Appium). Config-driven `ConfigReader`, a thread-safe `WebDriverFactory` (Chrome/Firefox/Edge for web, Appium `AndroidDriver` for mobile web), page objects (`HomePage`, `ProductsPage`, `CartPage`), `ApiBase` for API request specs, and tests covered in both plain TestNG **and** Cucumber BDD. The same UI tests run on both desktop and mobile Chrome without locator changes. Screenshot-on-failure and Allure reporting are wired up. A parallel **Playwright TypeScript** suite under `playwright-ts/` mirrors the same UI flows.
 
 ## Tech Stack
 
@@ -43,6 +43,9 @@ mvn test -Dtest=ConfigReaderTest#verifyConfigReader
 
 # Run the Cucumber suite (via its TestNG runner)
 mvn test -Dtest=CucumberRunner
+
+# Run API tests only (no browser needed)
+mvn test -DsuiteXmlFile=src/test/resources/testNG-api.xml
 ```
 
 > Run Maven from the **project root** — configuration is loaded via the relative path `src/main/resources/config.properties`, so a different working directory will break it.
@@ -57,6 +60,7 @@ All tunable values live in `src/main/resources/config.properties` and are read t
 | `browser`                         | Target browser for web runs (`chrome`, `firefox`, `edge`)       |
 | `headless`                        | Run the browser headless (`true`/`false`)                       |
 | `base.url`                        | Application under test                                          |
+| `api.base.url`                    | API base URL for RestAssured tests                              |
 | `implicit.wait` / `explicit.wait` | Selenium wait timeouts (seconds)                                |
 | `appium.server.url`               | Appium server endpoint                                          |
 | `mobile.platform`                 | Mobile OS (e.g. `android`)                                      |
@@ -71,6 +75,7 @@ Any config key can be overridden from the command line via `-Dkey=value` (e.g. `
 
 ```
 src/main/java/com/hemanth/automation/
+├── api/ApiBase.java                  # RestAssured RequestSpecification factory (JSON + form-encoded specs)
 ├── config/ConfigReader.java          # Loads config.properties; getProperty(...) accessors
 ├── driver/WebDriverFactory.java      # ThreadLocal<WebDriver> lifecycle; creates Chrome/Firefox/Edge or Appium AndroidDriver
 ├── constants/FrameworkConstants.java # Shared paths (config, screenshots, allure-results)
@@ -83,14 +88,18 @@ src/main/java/com/hemanth/automation/
 src/main/resources/config.properties  # Central configuration
 
 src/test/java/com/hemanth/automation/
-├── tests/                            # Plain TestNG tests (e.g. ConfigReaderTest, ProductsTest)
-│   └── BaseTest.java                 # @BeforeMethod/@AfterMethod driver lifecycle + ScreenshotListener
+├── tests/                            # Plain TestNG UI tests (e.g. ConfigReaderTest, ProductsTest)
+│   ├── BaseTest.java                 # @BeforeMethod/@AfterMethod driver lifecycle + ScreenshotListener
+│   └── api/ProductsApiTest.java      # API tests — products, brands, search (no browser needed)
 ├── listeners/ScreenshotListener.java  # TestNG ITestListener — screenshot on test failure
 ├── hooks/Hooks.java                  # Cucumber @Before/@After — driver lifecycle for BDD scenarios
 ├── stepdefinitions/                  # Cucumber step definitions (e.g. ProductsStepDefinitions)
 └── runners/CucumberRunner.java       # AbstractTestNGCucumberTests entry point for the BDD suite
 
-src/test/resources/features/          # .feature files (Gherkin scenarios), e.g. products.feature
+src/test/resources/
+├── features/                         # .feature files (Gherkin scenarios), e.g. products.feature
+├── testNG-api.xml                    # Suite file for API-only test runs
+└── testNG-mobile.xml                 # Suite file for mobile web test runs
 ```
 
 ## Cucumber BDD Layer
@@ -250,7 +259,7 @@ npm run test:headed
 
 The framework is intentionally scaffolded for UI + API + Mobile, but only the **web UI** path is complete today. Notes on what's still open:
 
-- **API testing** — `rest-assured` is already a dependency, but no API tests, request/response models, or service layer exist yet.
+- **API testing** — ~~`rest-assured` is already a dependency, but no API tests, request/response models, or service layer exist yet.~~ **Done.** `ApiBase` provides shared request specs (JSON + form-encoded), and `ProductsApiTest` covers products list, brands list, and product search endpoints with both happy-path and negative tests. Run with `mvn test -DsuiteXmlFile=src/test/resources/testNG-api.xml`.
 - **Mobile (Appium)** — ~~`WebDriverFactory` has an `AndroidDriver` path but has not been run against a real emulator/device.~~ **Done.** Mobile web testing works end-to-end via Appium + Android Emulator. The same `ProductsTest` flows run on mobile Chrome. See [Mobile Web Testing Setup](#mobile-web-testing-setup). Native app testing (APK) is not yet implemented.
 - **Double execution** — the same scenarios currently run twice on `mvn test` (once via the plain-TestNG `ProductsTest`, once via `CucumberRunner`). Acceptable for now; can be scoped later with a `testng.xml` suite or Maven profiles.
 - **CI pipeline** — no CI workflow is wired up yet (build + Selenium + Playwright suites on push/PR).
