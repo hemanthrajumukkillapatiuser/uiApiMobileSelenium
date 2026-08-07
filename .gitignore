@@ -52,3 +52,7 @@ playwright-ts/.cache/
 playwright-ts/**/*.zip
 playwright-ts/**/*.webm
 playwright-ts/**/*.png
+
+
+# Documents
+framework-overview.txt

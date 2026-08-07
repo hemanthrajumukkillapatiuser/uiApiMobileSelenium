@@ -214,4 +214,3 @@ The `platform` key (`web` / `mobile`) is the intended switch that selects betwee
 - New pages extend `BasePage` and keep locators private to the page class; reuse its `click`/`jsClick`/`isDisplayed` helpers instead of calling Selenium/`WebDriverWait` directly.
 - New BDD scenarios: add a `.feature` file under `src/test/resources/features/`, implement steps in `stepdefinitions/`, and reuse `Hooks` for driver setup/teardown — don't duplicate lifecycle logic in new step-definition classes. New glue packages must be added to `CucumberRunner`'s `@CucumberOptions(glue = ...)`.
 - New API tests go in the `tests.api` package and must **not** extend `BaseTest`. Use `ApiBase.requestSpec()` for JSON endpoints and `ApiBase.formRequestSpec()` for form-param endpoints. Add new test classes to `testNG-api.xml`.
-- `App.java` is leftover Maven-archetype boilerplate (`Hello World` main) and is not part of the framework.
