@@ -85,48 +85,21 @@ The agent generates UI tests by default. It can also generate API tests (using `
 
 ---
 
-## Selenium Java to Playwright TypeScript Migration Agent
+## Playwright TypeScript Suite
 
-This repository supports AI-assisted migration from Selenium Java tests to Playwright TypeScript tests.
+A parallel Playwright TypeScript test suite under `playwright-ts/` mirrors the same UI flows as the Selenium Java tests.
 
-### Goal
+### Conventions
 
-Convert existing Selenium Java TestNG or Cucumber tests into runnable Playwright TypeScript end-to-end tests while preserving the same business flow, page object design, assertions, and test intent.
-
-### Source Framework
-
-The source automation framework is Selenium Java.
-
-Rules for Java code:
-
-- Use TestNG only.
-- Never introduce JUnit.
-- Keep Selenium Java framework config-driven using `ConfigReader` and `config.properties`.
-- Keep WebDriver logic centralized in driver/factory classes.
-- Keep Selenium locators inside Java Page Object classes.
-- Keep test flow inside Java test classes or Cucumber step definitions.
-
-### Target Framework
-
-The target automation framework is Playwright TypeScript.
-
-Rules for Playwright code:
-
-- Use `@playwright/test`.
-- Use TypeScript.
-- Use async/await.
-- Use Playwright Page Object Model.
-- Keep page-specific locators inside `playwright-ts/pages`.
-- Keep test flow inside `playwright-ts/tests`.
-- Use Playwright `Locator`.
-- Use Playwright `expect` assertions.
-- Do not use hard waits.
-- Prefer Playwright auto-waiting and web-first assertions.
+- Use `@playwright/test` and TypeScript with async/await.
+- Use Playwright `Locator` and `expect` assertions.
+- Page-specific locators go in `playwright-ts/pages/`.
+- Test flow goes in `playwright-ts/tests/`.
+- Prefer Playwright auto-waiting and web-first assertions — no hard waits.
+- Prefer role, text, label, test id, or CSS locators when more stable than XPath.
 - Do not use JavaScript click unless normal Playwright click fails due to a real UI issue.
 
 ### Folder Structure
-
-Generated Playwright files must go here:
 
 ```text
 playwright-ts/
@@ -137,110 +110,27 @@ playwright-ts/
   package.json
 ```
 
-### Conversion Rules
-
-Use these rules when converting Selenium Java code to Playwright TypeScript:
-
-```text
-By.id("username")
-=> page.locator("#username")
-
-By.name("email")
-=> page.locator("[name='email']")
-
-By.cssSelector(".login")
-=> page.locator(".login")
-
-By.xpath("//a[contains(text(),'Products')]")
-=> page.locator("xpath=//a[contains(text(),'Products')]")
-
-driver.get(url)
-=> await page.goto(url)
-
-driver.findElement(locator)
-=> page.locator(...)
-
-element.click()
-=> await locator.click()
-
-element.sendKeys("text")
-=> await locator.fill("text")
-
-element.getText()
-=> await locator.textContent()
-
-element.isDisplayed()
-=> await expect(locator).toBeVisible()
-
-Assert.assertTrue(pageObject.isElementVisible())
-=> await expect(locator).toBeVisible()
-
-Assert.assertEquals(actual, expected)
-=> await expect(locator).toHaveText(expected)
-
-WebDriverWait + ExpectedConditions.visibilityOfElementLocated
-=> await expect(locator).toBeVisible()
-
-Thread.sleep()
-=> Do not convert. Replace with Playwright auto-waiting, locator wait, or expect assertion.
-
-TestNG @Test
-=> Playwright test()
-
-@BeforeMethod
-=> test.beforeEach()
-
-@AfterMethod
-=> test.afterEach()
-```
-
-### Migration Workflow
-
-When asked to convert a Selenium test to Playwright:
-
-1. Read the Selenium test class.
-2. Read the related Java Page Object classes.
-3. Identify the test flow, locators, waits, and assertions.
-4. Create or update matching Playwright page objects under `playwright-ts/pages`.
-5. Create or update matching Playwright specs under `playwright-ts/tests`.
-6. Use `@playwright/test`, `Locator`, async/await, and `expect`.
-7. Run the Playwright tests.
-8. Fix TypeScript, locator, or runtime issues.
-9. Keep Selenium and Playwright runnable independently.
-10. Do not blindly translate line by line.
-11. Preserve the original test intent.
-12. Prefer role, text, label, test id, or CSS locators when they are more stable.
-13. Use XPath only when the existing Selenium XPath is already reliable or no better locator exists.
-14. Keep assertions in the spec or page validation methods, but keep locators inside page objects.
-15. Do not use JavaScript click unless normal Playwright click fails due to a real UI issue.
-
 ### Commands
 
-Run Selenium Java tests:
-
-```bash
-mvn clean test
-```
-
-Run Playwright TypeScript tests:
-
 ```bash
 cd playwright-ts
-npm test
+npm test              # run tests
+npm run test:headed   # run headed
+npm run report        # open Playwright report
 ```
 
-Run Playwright headed:
+---
 
-```bash
-cd playwright-ts
-npm run test:headed
+## Selenium Java to Playwright TypeScript Migration Agent
+
+Converts Selenium Java tests into Playwright TypeScript while preserving test intent, business flow, and assertions. The conversion-specific rules and workflow live in the agent prompt at `agents/selenium-to-playwright/convert-test.prompt.md` — they are not loaded unless you explicitly invoke the agent.
+
+### Usage
+
+Point any AI coding assistant at the prompt file and specify which test to convert:
+
 ```
-
-Open Playwright report:
-
-```bash
-cd playwright-ts
-npm run report
+Read agents/selenium-to-playwright/convert-test.prompt.md, then convert ProductsTest to Playwright.
 ```
 
 ## Architecture
