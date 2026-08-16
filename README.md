@@ -144,6 +144,10 @@ robust-hybrid-automation-framework/
 │   └── package.json
 │
 ├── agents/                               # AI agent prompt files
+│   ├── git-push/
+│   │   └── push.prompt.md               # Commits, pushes, and optionally syncs with main
+│   ├── testcase-generator/
+│   │   └── generate-test.prompt.md       # Generates Selenium Java TestNG tests from a flow description
 │   └── selenium-to-playwright/
 │       └── convert-test.prompt.md
 │
@@ -290,6 +294,8 @@ This project includes several markdown files, each with a specific purpose:
 | [`AGENTS.md`](./AGENTS.md) | Instructions for AI coding assistants (Claude, Copilot, Cursor, etc.). Defines the rules any AI should follow when editing this codebase — architecture details, coding conventions, and how to extend the framework. This is the **single source of truth** for all AI agents. |
 | [`CLAUDE.md`](./CLAUDE.md) | Entry point for [Claude Code](https://claude.ai/code). Points to `AGENTS.md` so Claude follows the same rules as other AI tools. |
 | [`.github/copilot-instructions.md`](./.github/copilot-instructions.md) | Entry point for GitHub Copilot. Points to `AGENTS.md` so Copilot follows the same rules. |
+| [`agents/git-push/push.prompt.md`](./agents/git-push/push.prompt.md) | A reusable prompt for AI-assisted git commit + push workflow. Shows changes, confirms with the user, pushes, and offers to sync with main. Also available as a Claude Code skill (`/push`). |
+| [`agents/testcase-generator/generate-test.prompt.md`](./agents/testcase-generator/generate-test.prompt.md) | A reusable prompt for AI-assisted generation of Selenium Java TestNG test cases. Describe a user flow and it generates page objects + test classes following the framework's conventions. |
 | [`agents/selenium-to-playwright/convert-test.prompt.md`](./agents/selenium-to-playwright/convert-test.prompt.md) | A reusable prompt for AI-assisted conversion of Selenium Java tests to Playwright TypeScript tests. Defines the step-by-step workflow: read source, plan, get approval, generate, run, fix. |
 
 **Why multiple files?** Different AI tools look for instructions in different places (`CLAUDE.md` for Claude Code, `.github/copilot-instructions.md` for Copilot). Rather than duplicating rules, they all point to `AGENTS.md` as the single source of truth. This way, updating one file keeps all AI assistants in sync.

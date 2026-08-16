@@ -31,6 +31,60 @@ mvn test -Dtest=CucumberRunner                         # run the Cucumber BDD su
 - Run Maven from the **project root** — `ConfigReader` loads `config.properties` via the relative path `src/main/resources/config.properties`, so a different working directory breaks it.
 - Allure results are written under `target/allure-results/` (see `FrameworkConstants`). The `allure-maven` plugin **is** configured in `pom.xml`: `mvn allure:report` (generates `target/site/allure-maven-plugin`) or `mvn allure:serve`. You can also use the Allure CLI directly: `allure serve target/allure-results`.
 
+## Git Push Agent
+
+Commits changes to the current branch, pushes to remote, and optionally pulls latest from main. The agent prompt lives at `agents/git-push/push.prompt.md`. A Claude Code skill (`/push`) is also available at `.claude/skills/push.md`.
+
+### What it does
+
+1. Shows `git status` and the current branch.
+2. Shows the diff and summarizes changes.
+3. Checks for secrets, IDE files, or build artifacts — warns before committing.
+4. Asks for confirmation and a commit message.
+5. Commits and pushes to the remote.
+6. Reports the commit hash, branch, and remote URL.
+7. Offers to pull latest from main and push again.
+
+### Usage
+
+Claude Code (slash command):
+```
+/push
+```
+
+Any AI tool (read the prompt):
+```
+Read agents/git-push/push.prompt.md and run it.
+```
+
+---
+
+## Test Case Generator Agent
+
+This repository supports AI-assisted generation of Selenium Java TestNG test cases. The agent prompt lives at `agents/testcase-generator/generate-test.prompt.md`.
+
+### What it does
+
+Given a user flow description (e.g., "test the login page" or "verify checkout works"), the agent:
+
+1. Reads existing page objects to see what's already available.
+2. Plans which page objects to create/update and which test class to generate.
+3. Asks for approval before editing files.
+4. Generates page objects (extending `BasePage`) and test classes (extending `BaseTest`) following the framework's established patterns — TestNG, Allure annotations, config-driven, thread-safe.
+5. Compiles and runs the new test, fixing any issues.
+
+### Usage
+
+Point any AI coding assistant at the prompt file and describe the flow you want tested:
+
+```
+Read agents/testcase-generator/generate-test.prompt.md, then generate a test for the login flow.
+```
+
+The agent generates UI tests by default. It can also generate API tests (using `ApiBase`, no `BaseTest`) or BDD scenarios (feature files + step definitions) when asked.
+
+---
+
 ## Selenium Java to Playwright TypeScript Migration Agent
 
 This repository supports AI-assisted migration from Selenium Java tests to Playwright TypeScript tests.
